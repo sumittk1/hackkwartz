@@ -1,0 +1,2861 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080b10">
+  <meta name="description" content="The Seven Horcruxes CTF — Defense Against the Dark Arts Web Security Reliquary at Hackwarts. Seven arcane security trials and ancient soul fragments.">
+  <title>The Seven Horcruxes CTF | Hackwarts</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Cinzel+Decorative:wght@700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Outfit:wght@300;400;500;600;700&family=Pirata+One&display=swap" rel="stylesheet">
+  
+  <style>
+    @font-face {
+      font-family: "Harry P";
+      src: local("Harry P"), local("HarryP"), url("HarryP-MVZ6w.ttf") format("truetype");
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    :root {
+      color-scheme: dark;
+      --font-harry: "Harry P", "Cinzel", Georgia, serif;
+      --font-display: "Cinzel", "Cinzel Decorative", Georgia, serif;
+      --font-heading: "Cinzel", Georgia, "Times New Roman", serif;
+      --font-body: "EB Garamond", Georgia, "Times New Roman", serif;
+      --font-ui: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      
+      --gold-100: #fff6db;
+      --gold-200: #f6e0a3;
+      --gold-300: #e8c27e;
+      --gold-400: #d4a754;
+      --gold-500: #b8862d;
+      
+      --bg-dark: #070a0f;
+      --bg-surface: rgba(10, 15, 24, 0.85);
+      --bg-card: rgba(8, 13, 20, 0.82);
+      
+      --border-gold: rgba(212, 175, 55, 0.38);
+      --border-gold-glow: rgba(240, 207, 138, 0.65);
+      
+      --text-main: #f5f0df;
+      --text-muted: #c8c0ae;
+      --text-dim: #9b9380;
+      
+      --glow-gold: 0 0 16px rgba(232, 194, 126, 0.35);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      width: 100%;
+      min-width: 320px;
+      margin: 0;
+      scroll-behavior: smooth;
+      cursor: url("wand-cursor.svg") 24 8, auto;
+    }
+
+    body {
+      width: 100%;
+      min-height: 100vh;
+      margin: 0;
+      font-family: var(--font-body);
+      font-size: 18px;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      overflow-x: hidden;
+      overflow-y: auto;
+      line-height: 1.7;
+    }
+
+    /* Ambient Video Background */
+    .bg-video-wrap {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .bg-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.28;
+      filter: saturate(1.2) brightness(0.65);
+    }
+
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: radial-gradient(ellipse at 50% 20%, rgba(13, 20, 32, 0.65) 0%, rgba(6, 9, 15, 0.94) 85%);
+      pointer-events: none;
+    }
+
+    /* Custom Wand Cursor */
+    .wand-cursor {
+      position: fixed;
+      z-index: 9999;
+      top: 0;
+      left: 0;
+      width: 64px;
+      height: 64px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate3d(-100px, -100px, 0);
+      transition: opacity 100ms ease-out;
+    }
+
+    .wand-cursor.is-visible {
+      opacity: 1;
+    }
+
+    .wand-cursor-image {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .wand-orbit {
+      position: absolute;
+      top: 10px;
+      left: 28px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: wand-spin 3s linear infinite;
+    }
+
+    .wand-orbit--wide {
+      top: 6px;
+      left: 24px;
+      width: 30px;
+      height: 30px;
+      animation-duration: 4.5s;
+      animation-direction: reverse;
+    }
+
+    .wand-spark {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 4px;
+      height: 4px;
+      margin-left: -2px;
+      border-radius: 50%;
+      background: #fdf5d6;
+      box-shadow: 0 0 10px #f4d38e, 0 0 18px rgba(244, 211, 142, 0.85);
+    }
+
+    @keyframes wand-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Fixed Topbar Navigation (Matching index.html) */
+    .topbar {
+      position: fixed;
+      z-index: 100;
+      top: 0;
+      right: 0;
+      left: 0;
+      display: flex;
+      min-height: 78px;
+      align-items: center;
+      justify-content: space-between;
+      gap: clamp(16px, 2.5vw, 42px);
+      padding: 0 clamp(20px, 4vw, 68px);
+      border-top: 1px solid rgb(232 190 109 / 44%);
+      border-bottom: 1px solid rgb(229 203 143 / 22%);
+      background: linear-gradient(90deg, rgba(5, 11, 18, 0.94), rgba(7, 14, 22, 0.88) 50%, rgba(5, 11, 18, 0.94));
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .brand {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      line-height: 1;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .brand-logo {
+      display: block;
+      width: clamp(150px, 15vw, 205px);
+      height: auto;
+      flex: 0 0 auto;
+      filter: drop-shadow(0 0 8px rgb(219 164 75 / 22%));
+      transition: transform 0.2s ease;
+    }
+
+    .brand-logo:hover {
+      transform: scale(1.02);
+    }
+
+    .nav-links {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(14px, 2vw, 36px);
+      margin: 0 auto;
+      font-family: var(--font-heading);
+    }
+
+    .nav-link {
+      position: relative;
+      padding: 10px 0;
+      color: #e5e1d9;
+      font-size: clamp(14px, 1.05vw, 16px);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: color 180ms ease;
+    }
+
+    .nav-link::after {
+      position: absolute;
+      right: 50%;
+      bottom: 2px;
+      left: 50%;
+      height: 2px;
+      background: #e8c27e;
+      box-shadow: 0 0 6px rgba(232, 194, 126, 0.8);
+      content: "";
+      transition: right 180ms ease, left 180ms ease;
+    }
+
+    .nav-link:hover,
+    .nav-link[aria-current="page"] {
+      color: #f2cd82;
+      text-shadow: 0 0 10px rgba(242, 205, 130, 0.45);
+    }
+
+    .nav-link:hover::after,
+    .nav-link[aria-current="page"]::after {
+      right: 0;
+      left: 0;
+    }
+
+    .register-link {
+      display: inline-flex;
+      min-height: 44px;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 0 22px;
+      border: 1px solid #bf9550;
+      border-radius: 4px;
+      background:
+        linear-gradient(135deg, rgb(219 170 83 / 16%), transparent 60%),
+        rgb(8 13 19 / 65%);
+      box-shadow: inset 0 0 0 1px rgb(238 200 124 / 16%), 0 0 18px rgb(196 145 61 / 14%);
+      color: #ebd193;
+      font-family: var(--font-heading);
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: all 200ms ease;
+    }
+
+    .register-link:hover {
+      border-color: #f5dc9e;
+      background-color: rgb(183 133 57 / 24%);
+      box-shadow: inset 0 0 0 1px rgb(238 200 124 / 32%), 0 0 25px rgb(196 145 61 / 28%);
+      transform: translateY(-1px);
+      color: #fff2cc;
+    }
+
+    .register-arrow {
+      width: 17px;
+      height: 17px;
+      fill: currentColor;
+      transition: transform 0.2s ease;
+    }
+
+    .register-link:hover .register-arrow {
+      transform: translateX(3px);
+    }
+
+    /* Fixed Audio Toggle */
+    .music-toggle {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 90;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 1px solid rgba(229, 193, 125, 0.4);
+      background: rgba(10, 15, 24, 0.85);
+      backdrop-filter: blur(8px);
+      color: #e5c17d;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+      transition: all 0.25s ease;
+    }
+
+    .music-toggle:hover {
+      border-color: #f0cf8a;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(229, 193, 125, 0.5);
+      transform: scale(1.08);
+    }
+
+    .music-toggle svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+
+    .icon-sound { display: none; }
+    .icon-muted { display: block; }
+
+    .music-toggle[aria-pressed="true"] .icon-sound { display: block; }
+    .music-toggle[aria-pressed="true"] .icon-muted { display: none; }
+
+    /* Layout Containers */
+    .ctf-page-wrap {
+      max-width: 1540px;
+      margin: 0 auto;
+      padding: 120px 24px 80px;
+    }
+
+    /* Section Number Header Flourish */
+    .section-number-header {
+      text-align: center;
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .section-num {
+      display: block;
+      font-family: var(--font-display);
+      font-size: clamp(48px, 8vw, 84px);
+      line-height: 0.9;
+      color: transparent;
+      background: linear-gradient(180deg, rgba(240, 207, 138, 0.45) 0%, rgba(240, 207, 138, 0.05) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      margin-bottom: -15px;
+      user-select: none;
+    }
+
+    .section-flourish {
+      width: 140px;
+      height: 18px;
+      margin: 0 auto 12px;
+      display: block;
+    }
+
+    .section-eyebrow {
+      display: block;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #dfb66c;
+      margin-bottom: 8px;
+    }
+
+    .section-main-title {
+      font-family: var(--font-harry);
+      font-size: clamp(48px, 6vw, 76px);
+      font-weight: 400;
+      letter-spacing: 2px;
+      color: #faeed4;
+      margin: 0 0 12px;
+      line-height: 1.05;
+      text-shadow: 0 0 24px rgba(229, 193, 125, 0.35);
+    }
+
+    .section-desc {
+      max-width: 740px;
+      margin: 0 auto;
+      font-size: 19px;
+      color: #cec4b2;
+      line-height: 1.6;
+    }
+
+    /* Compact Reliquary Status HUD (3 Small Vertically Thin Stat Boxes) */
+    .reliquary-hud {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 36px;
+      padding: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      position: relative;
+    }
+
+    .hud-stats-row {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hud-stat-box {
+      background: linear-gradient(180deg, rgba(16, 23, 36, 0.85) 0%, rgba(9, 13, 21, 0.92) 100%);
+      border: 1px solid rgba(229, 193, 125, 0.28);
+      border-radius: 4px;
+      padding: 5px 16px;
+      text-align: center;
+      min-width: 90px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 235, 175, 0.15);
+      transition: all 0.25s ease;
+    }
+
+    .hud-stat-box:hover {
+      border-color: rgba(229, 193, 125, 0.55);
+      background: linear-gradient(180deg, rgba(24, 34, 52, 0.92) 0%, rgba(13, 18, 30, 0.96) 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6), 0 0 12px rgba(229, 193, 125, 0.2);
+    }
+
+    .hud-stat-value {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: #f0cf8a;
+      line-height: 1.15;
+      display: block;
+    }
+
+    .hud-stat-label {
+      font-family: var(--font-ui);
+      font-size: 9.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #9f9684;
+      display: block;
+      margin-top: 1px;
+      white-space: nowrap;
+    }
+
+    /* Filigree Corner Bracket Component (Matching cards/image.png) */
+    .magical-box {
+      position: relative;
+      background: rgba(6, 10, 16, 0.96);
+      border: 1px solid rgba(229, 193, 125, 0.16);
+      border-radius: 4px;
+      padding: 30px 26px 24px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75);
+    }
+
+    .box-corner {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      pointer-events: none;
+    }
+
+    .box-corner--tl {
+      top: -1px;
+      left: -1px;
+      border-top: 2px solid #dfb66c;
+      border-left: 2px solid #dfb66c;
+    }
+
+    .box-corner--tr {
+      top: -1px;
+      right: -1px;
+      border-top: 2px solid #dfb66c;
+      border-right: 2px solid #dfb66c;
+    }
+
+    .box-corner--bl {
+      bottom: -1px;
+      left: -1px;
+      border-bottom: 2px solid #dfb66c;
+      border-left: 2px solid #dfb66c;
+    }
+
+    .box-corner--br {
+      bottom: -1px;
+      right: -1px;
+      border-bottom: 2px solid #dfb66c;
+      border-right: 2px solid #dfb66c;
+    }
+
+    /* CTF Grid (2 cards per row on desktop and tablet, 1 card on mobile) */
+    .ctf-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+      max-width: 1480px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    @media (max-width: 1024px) {
+      .topbar {
+        padding: 0 24px;
+        gap: 16px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .ctf-grid { grid-template-columns: 1fr; }
+      .topbar {
+        display: grid;
+        min-height: 106px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-rows: 58px 44px;
+        gap: 0 16px;
+        padding: 0 18px 4px;
+      }
+
+      .nav-links {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        justify-content: flex-start;
+        gap: 22px;
+        width: 100%;
+        margin: 0;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scrollbar-width: none;
+      }
+
+      .nav-links::-webkit-scrollbar {
+        display: none;
+      }
+
+      .nav-link {
+        padding: 8px 0;
+        font-size: 14px;
+      }
+
+      .brand-logo {
+        width: 155px;
+      }
+
+      .register-link {
+        min-height: 38px;
+        gap: 4px;
+        padding: 0 14px;
+        font-size: 13px;
+      }
+
+      .ctf-page-wrap {
+        padding-top: 140px;
+      }
+    }
+
+    /* ========================================================
+       CTF CHALLENGE CARD (Authentic Replica of cards/image.png)
+       ======================================================== */
+    .ctf-card {
+      position: relative;
+      display: grid;
+      grid-template-columns: 175px 1fr;
+      gap: 18px;
+      background: radial-gradient(circle at 85% 15%, rgba(20, 27, 44, 0.98), rgba(7, 10, 16, 0.99) 70%), #070a10;
+      border: 1.5px solid #a87932;
+      border-radius: 6px;
+      padding: 18px 18px 14px 16px;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.85), inset 0 0 32px rgba(0, 0, 0, 0.6);
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      overflow: visible;
+    }
+
+    /* Inner inset gold decorative line */
+    .ctf-card::before {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border: 1px solid rgba(212, 163, 67, 0.22);
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    .ctf-card:hover {
+      transform: translateY(-2px);
+      border-color: #d4a754;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(212, 163, 67, 0.18);
+    }
+
+    .ctf-card.is-solved {
+      border-color: rgba(74, 222, 128, 0.55);
+      background: radial-gradient(circle at 85% 15%, rgba(12, 34, 22, 0.98), rgba(6, 14, 10, 0.99) 70%), #060e0a;
+    }
+
+    /* Bookmark Ribbon hanging down from top right (Exact from cards/image.png) */
+    .card-bookmark-ribbon {
+      position: absolute;
+      top: -2px;
+      right: 22px;
+      width: 26px;
+      height: 38px;
+      background: linear-gradient(180deg, #1d2533 0%, #0c111c 100%);
+      border: 1.5px solid #a87932;
+      border-top: none;
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 6px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .card-bookmark-ribbon svg {
+      width: 13px;
+      height: 13px;
+      color: #dfb66c;
+    }
+
+    /* Corner Star Flairs */
+    .card-corner-star {
+      position: absolute;
+      color: #dfb66c;
+      font-size: 11px;
+      line-height: 1;
+      pointer-events: none;
+      opacity: 0.85;
+      text-shadow: 0 0 5px rgba(223, 182, 108, 0.6);
+    }
+    .card-corner-star--tl { top: 9px; left: 9px; }
+    .card-corner-star--tr { top: 9px; right: 54px; } /* clear ribbon */
+    .card-corner-star--bl { bottom: 9px; left: 9px; }
+    .card-corner-star--br { bottom: 9px; right: 9px; }
+
+    /* Left Column: Arched Hogwarts Portal */
+    .card-portal-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .card-portal-frame {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 250px;
+      border-radius: 86px 86px 6px 6px;
+      border: 1.5px solid #b8860b;
+      box-shadow: 0 0 16px rgba(0, 0, 0, 0.9), 0 0 12px rgba(184, 134, 11, 0.2);
+      overflow: hidden;
+      background: #060910;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-portal-frame::after {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      border-radius: 82px 82px 4px 4px;
+      border: 1px solid rgba(223, 182, 108, 0.3);
+      pointer-events: none;
+    }
+
+    .card-portal-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* Right Column: Challenge Information */
+    .card-info-col {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Eyebrow: ✦ CTF CHALLENGE */
+    .card-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-heading);
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2.2px;
+      color: #dfb66c;
+      margin-bottom: 2px;
+    }
+
+    .card-eyebrow .sparkle {
+      color: #f7e2a9;
+      font-size: 11px;
+    }
+
+    /* Challenge Title (Harry Potter font from cards/image.png) */
+    .card-title-harry {
+      font-family: "Harry P", "Cinzel", Georgia, serif;
+      font-size: 36px;
+      font-weight: normal;
+      letter-spacing: 1.2px;
+      line-height: 1.05;
+      margin: 0 0 4px;
+      color: #ffe699;
+      background: linear-gradient(180deg, #fff2c4 0%, #dfb66c 55%, #a87932 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 6px rgba(223, 182, 108, 0.3));
+    }
+
+    /* Narrative Teaser (Italic serif) */
+    .card-teaser {
+      font-family: "Cinzel", Georgia, "Times New Roman", serif;
+      font-style: italic;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #9ba4b5;
+      margin: 0 0 10px;
+    }
+
+    /* Meta Badges Strip (3 items: Category, Difficulty, Points) */
+    .card-meta-strip {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(223, 182, 108, 0.14);
+    }
+
+    .card-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .card-meta-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(15, 20, 30, 0.85);
+      border: 1px solid rgba(223, 182, 108, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #dfb66c;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-meta-icon svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .card-meta-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .card-meta-label {
+      font-family: var(--font-ui);
+      font-size: 9.5px;
+      color: #8c96a8;
+      letter-spacing: 0.5px;
+    }
+
+    .card-meta-value {
+      font-family: var(--font-heading);
+      font-size: 12px;
+      font-weight: 700;
+      color: #faeed4;
+      letter-spacing: 0.5px;
+    }
+
+    /* Difficulty (Clean text, no box/pill border) */
+    .diff-pill {
+      font-family: var(--font-heading);
+      font-size: 12px;
+      font-weight: 700;
+      color: #faeed4;
+      letter-spacing: 0.5px;
+      background: transparent;
+      border: none;
+      padding: 0;
+      border-radius: 0;
+      display: inline-block;
+      line-height: normal;
+    }
+
+    .ctf-card.is-solved .diff-pill {
+      background: transparent;
+      border: none;
+      color: #86efac;
+    }
+
+    /* Challenge Details Box (Parchment Container from cards/image.png) */
+    .card-details-box {
+      background: rgba(11, 16, 26, 0.7);
+      border: 1px solid rgba(223, 182, 108, 0.22);
+      border-radius: 5px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+    }
+
+    .card-details-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-heading);
+      font-size: 12px;
+      font-weight: 700;
+      color: #dfb66c;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
+    }
+
+    .card-details-header .scroll-icon {
+      width: 14px;
+      height: 14px;
+      color: #dfb66c;
+      flex-shrink: 0;
+    }
+
+    .card-details-desc {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 12px;
+      color: #cfd6e2;
+      line-height: 1.45;
+      margin: 0 0 7px;
+    }
+
+    .ctf-skills-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+
+    .ctf-skill-tag {
+      background: rgba(12, 17, 26, 0.7);
+      border: 1px solid rgba(229, 193, 125, 0.2);
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-family: var(--font-ui);
+      font-size: 9.5px;
+      color: #94a3b8;
+    }
+
+    /* Submission Form on Card (Recover the Soul Fragment) */
+    .ctf-submit-form {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 2px;
+      background: rgba(6, 10, 16, 0.85);
+      padding: 7px 9px;
+      border-radius: 4px;
+      border: 1px solid rgba(229, 193, 125, 0.18);
+    }
+
+    .ctf-section-title {
+      font-family: var(--font-heading);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #dfb66c;
+      margin: 0 0 1px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .ctf-input-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .ctf-flag-input {
+      flex: 1;
+      background: rgba(5, 8, 13, 0.9);
+      border: 1px solid rgba(229, 193, 125, 0.25);
+      border-radius: 3px;
+      padding: 0 10px;
+      height: 32px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #faeed4;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .ctf-flag-input::placeholder {
+      color: #64748b;
+    }
+
+    .ctf-flag-input:focus {
+      border-color: #dfb66c;
+      box-shadow: 0 0 8px rgba(223, 182, 108, 0.25);
+    }
+
+    .ctf-cast-btn {
+      background: rgba(12, 18, 28, 0.78);
+      border: 1px solid rgba(229, 193, 125, 0.38);
+      color: #faeed4;
+      font-family: var(--font-heading);
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      padding: 0 14px;
+      height: 32px;
+      border-radius: 3px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 0 8px rgba(229, 193, 125, 0.04);
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .ctf-cast-btn:hover:not(:disabled) {
+      background: rgba(229, 193, 125, 0.16);
+      border-color: #f0cf8a;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(223, 182, 108, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .ctf-feedback-msg {
+      font-size: 12px;
+      line-height: 1.35;
+      min-height: 16px;
+      display: none;
+      font-family: var(--font-ui);
+    }
+
+    .ctf-feedback-msg.success {
+      display: block;
+      color: #64dc96;
+    }
+
+    .ctf-feedback-msg.error {
+      display: block;
+      color: #f87171;
+    }
+
+    /* Card Footer Strip (Ancient Hint, Solve Challenge button) */
+    .card-footer-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: auto;
+      padding-top: 2px;
+      flex-wrap: wrap;
+    }
+
+    .card-footer-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ctf-hint-btn {
+      background: rgba(10, 15, 23, 0.7);
+      border: 1px solid rgba(229, 193, 125, 0.3);
+      color: #cfc5b3;
+      font-family: var(--font-heading);
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      padding: 4px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 8px rgba(229, 193, 125, 0.03);
+      transition: all 0.2s ease;
+    }
+
+    .ctf-hint-btn:hover {
+      border-color: #dfb66c;
+      color: #faeed4;
+      background: rgba(229, 193, 125, 0.15);
+      box-shadow: 0 0 10px rgba(223, 182, 108, 0.25);
+    }
+
+    /* Solve Challenge Button (Light Dark Aesthetic with Fine Gold Bevel) */
+    .solve-challenge-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(10, 15, 24, 0.82);
+      border: 1.5px solid rgba(223, 182, 108, 0.5);
+      border-radius: 4px;
+      padding: 7px 16px;
+      font-family: var(--font-heading);
+      font-size: 12px;
+      font-weight: 700;
+      color: #faeed4;
+      text-decoration: none;
+      letter-spacing: 1.1px;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6), inset 0 0 10px rgba(229, 193, 125, 0.05);
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+    }
+
+    .solve-challenge-btn::before {
+      content: "";
+      position: absolute;
+      inset: -3px;
+      border: 1px solid rgba(223, 182, 108, 0.3);
+      border-radius: 5px;
+      pointer-events: none;
+      transition: all 0.28s ease;
+    }
+
+    .solve-challenge-btn:hover {
+      background: rgba(22, 30, 46, 0.92);
+      color: #ffffff;
+      border-color: #f0cf8a;
+      box-shadow: 0 5px 16px rgba(0, 0, 0, 0.8), 0 0 14px rgba(223, 182, 108, 0.35), inset 0 0 12px rgba(229, 193, 125, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .solve-challenge-btn:hover::before {
+      border-color: rgba(240, 207, 138, 0.7);
+      inset: -3.5px;
+    }
+
+    .solve-challenge-btn .wand-icon {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      display: inline-block;
+      vertical-align: middle;
+      filter: drop-shadow(0 0 4px rgba(255, 215, 100, 0.75));
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .solve-challenge-btn:hover .wand-icon {
+      transform: scale(1.15) rotate(5deg);
+      filter: drop-shadow(0 0 8px rgba(255, 230, 120, 1)) drop-shadow(0 0 3px #ffffff);
+    }
+
+    /* Final Climax Card (Chamber 07 - Centered across grid) */
+    .ctf-final-card {
+      grid-column: 1 / -1;
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      background: radial-gradient(circle at 85% 15%, rgba(35, 18, 56, 0.98), rgba(10, 6, 18, 0.99) 70%), #0a0612;
+      border-color: rgba(192, 132, 252, 0.4);
+    }
+
+    .ctf-final-card:hover {
+      border-color: rgba(216, 180, 254, 0.7);
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9), 0 0 28px rgba(168, 85, 247, 0.25);
+    }
+
+    .ctf-final-card .card-eyebrow {
+      color: #d8b4fe;
+    }
+
+    .ctf-final-card .card-title-harry {
+      background: linear-gradient(180deg, #f5d0fe 0%, #c084fc 55%, #7e22ce 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 10px rgba(192, 132, 252, 0.35));
+    }
+
+    .ctf-final-card .diff-pill {
+      background: transparent;
+      border: none;
+      color: #e9d5ff;
+    }
+
+    .ctf-final-card .solve-challenge-btn {
+      background: rgba(22, 10, 34, 0.82);
+      border-color: rgba(192, 132, 252, 0.45);
+    }
+
+    .ctf-final-card .solve-challenge-btn:hover {
+      background: rgba(42, 18, 66, 0.92);
+      border-color: #d8b4fe;
+      color: #ffffff;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1050px) {
+      .ctf-grid {
+        gap: 16px;
+      }
+      .ctf-card {
+        grid-template-columns: 145px 1fr;
+        gap: 14px;
+        padding: 14px 14px 12px 14px;
+      }
+      .card-portal-frame {
+        min-height: 220px;
+        border-radius: 70px 70px 6px 6px;
+      }
+      .card-portal-frame::after {
+        border-radius: 66px 66px 4px 4px;
+      }
+      .card-title-harry {
+        font-size: 28px;
+      }
+      .card-meta-strip {
+        gap: 10px;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+      }
+      .card-meta-item {
+        gap: 6px;
+      }
+      .card-meta-icon {
+        width: 24px;
+        height: 24px;
+      }
+      .card-meta-icon svg {
+        width: 12px;
+        height: 12px;
+      }
+      .card-meta-label {
+        font-size: 8.5px;
+      }
+      .card-meta-value,
+      .diff-pill {
+        font-size: 11px;
+      }
+      .card-actions-row {
+        gap: 8px;
+      }
+      .solve-challenge-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .ctf-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+      .ctf-final-card {
+        grid-column: auto;
+        max-width: 100%;
+      }
+      .ctf-card {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 16px 14px;
+      }
+      .card-portal-frame {
+        max-height: 220px;
+        min-height: auto;
+        border-radius: 80px 80px 6px 6px;
+      }
+      .card-bookmark-ribbon {
+        right: 14px;
+        width: 24px;
+      }
+      .card-corner-star--tr {
+        right: 46px;
+      }
+      .card-actions-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .solve-challenge-btn {
+        justify-content: center;
+      }
+    }
+
+    /* Modal for Hints (Scrollbar-free, Premium Hogwarts Parchment) */
+    .ctf-modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: radial-gradient(circle at center, rgba(12, 17, 28, 0.88), rgba(3, 5, 8, 0.95));
+      backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .ctf-modal-overlay.is-active {
+      display: flex;
+    }
+
+    .ctf-modal-box {
+      position: relative;
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE / Edge */
+      box-sizing: border-box;
+      background: radial-gradient(circle at 50% 0%, rgba(24, 32, 50, 0.98), rgba(8, 12, 18, 0.99) 75%), #080c12;
+      border: 1.5px solid #a87932;
+      border-radius: 8px;
+      padding: 32px 30px 24px;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.95), 0 0 35px rgba(223, 182, 108, 0.2);
+    }
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .ctf-modal-box::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+
+    /* Inner inset gold decorative line */
+    .ctf-modal-box::before {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border: 1px solid rgba(212, 163, 67, 0.2);
+      border-radius: 6px;
+      pointer-events: none;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(18, 25, 38, 0.8);
+      border: 1px solid rgba(223, 182, 108, 0.3);
+      color: #dfb66c;
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      z-index: 5;
+    }
+
+    .modal-close-btn:hover {
+      background: rgba(223, 182, 108, 0.2);
+      border-color: #dfb66c;
+      color: #fff;
+      transform: rotate(90deg) scale(1.05);
+    }
+
+    #hintModalTitle {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      background: linear-gradient(180deg, #fff2c4 0%, #dfb66c 55%, #a87932 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 8px rgba(223, 182, 108, 0.3));
+      margin: 0 0 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #hintModalDesc {
+      font-family: Georgia, serif;
+      font-size: 13.5px;
+      line-height: 1.55;
+      color: #b8c1d1;
+      margin: 0 0 18px;
+    }
+
+    .hints-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin: 16px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .hint-card-item {
+      background: rgba(11, 16, 26, 0.85);
+      border: 1px solid rgba(223, 182, 108, 0.25);
+      border-radius: 6px;
+      padding: 18px 20px;
+      transition: all 0.25s ease;
+      position: relative;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    .hint-card-item.is-unlocked {
+      border-color: rgba(74, 222, 128, 0.5);
+      background: radial-gradient(circle at 90% 10%, rgba(14, 38, 25, 0.9), rgba(8, 20, 14, 0.95));
+      box-shadow: 0 0 20px rgba(74, 222, 128, 0.15);
+    }
+
+    .hint-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .hint-card-title {
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffe699;
+      letter-spacing: 1px;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hint-cost-badge {
+      font-family: var(--font-heading);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 12px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .hint-cost-badge.is-locked {
+      background: rgba(153, 27, 27, 0.25);
+      border: 1px solid rgba(248, 113, 113, 0.4);
+      color: #fca5a5;
+    }
+
+    .hint-cost-badge.is-unlocked {
+      background: rgba(22, 101, 52, 0.3);
+      border: 1px solid rgba(74, 222, 128, 0.5);
+      color: #86efac;
+    }
+
+    .hint-body-unlocked {
+      background: rgba(6, 14, 10, 0.85);
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      border-left: 4px solid #4ade80;
+      padding: 14px 16px;
+      border-radius: 4px;
+      color: #f0fdf4;
+      font-size: 14.5px;
+      line-height: 1.6;
+      font-family: Georgia, serif;
+      box-shadow: inset 0 0 12px rgba(74, 222, 128, 0.08);
+    }
+
+    .hint-body-locked {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .hint-locked-text {
+      color: #9ba5b7;
+      font-size: 13.5px;
+      font-style: italic;
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      margin: 0;
+    }
+
+    .hint-unlock-action-btn {
+      align-self: flex-start;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(180deg, #422d0d 0%, #201504 100%);
+      border: 1.5px solid #dfb66c;
+      border-radius: 4px;
+      padding: 9px 20px;
+      font-family: var(--font-heading);
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: #faeed4;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 235, 175, 0.3);
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .hint-unlock-action-btn:hover:not(:disabled) {
+      background: linear-gradient(180deg, #dfb66c 0%, #996d19 100%);
+      color: #070a10;
+      border-color: #fce19a;
+      box-shadow: 0 0 18px rgba(223, 182, 108, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .hint-unlock-action-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .modal-footer-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 18px;
+      border-top: 1px solid rgba(223, 182, 108, 0.16);
+      padding-top: 14px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .modal-footer-close-btn {
+      background: rgba(18, 25, 38, 0.8);
+      border: 1px solid rgba(223, 182, 108, 0.35);
+      color: #e2d9c8;
+      font-family: var(--font-heading);
+      font-size: 12px;
+      letter-spacing: 1px;
+      padding: 8px 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .modal-footer-close-btn:hover {
+      border-color: #dfb66c;
+      color: #faeed4;
+      background: rgba(223, 182, 108, 0.15);
+    }
+
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid rgba(229, 193, 125, 0.2);
+      background: #040609;
+      padding: 40px 24px 30px;
+      text-align: center;
+      margin-top: 80px;
+    }
+
+    .footer-credits {
+      font-size: 15px;
+      color: #928b7e;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Video Background -->
+  <div class="bg-video-wrap" aria-hidden="true">
+    <video class="bg-video" autoplay muted loop playsinline>
+      <source src="main%20background%20video.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="bg-overlay" aria-hidden="true"></div>
+
+  <!-- Topbar Fixed Navigation -->
+  <nav class="topbar" aria-label="Main navigation">
+    <a class="brand" href="index.html#home" title="Hackwarts — The Wizarding Hackathon">
+      <img class="brand-logo" src="Golden%20Hackwarts%20Wizarding%20Emblem.png" alt="Hackwarts">
+    </a>
+
+    <div class="nav-links">
+      <a class="nav-link" href="index.html#home">Home</a>
+      <a class="nav-link" href="index.html#about">About</a>
+      <a class="nav-link" href="index.html#houses">Houses</a>
+      <a class="nav-link" href="index.html#tracks">Tracks</a>
+      <a class="nav-link" href="index.html#schedule">Schedule</a>
+      <a class="nav-link" href="/ctf" onclick="if(location.protocol==='file:' || location.pathname.includes('/hackkwartz-main/')){location.href='ctf.html';return false;}" aria-current="page">CTF</a>
+      <a class="nav-link" href="index.html#faqs">FAQs</a>
+      <a class="nav-link" href="index.html#contact">Contact</a>
+    </div>
+
+    <a class="register-link" href="index.html#register">
+      Register Now
+      <svg class="register-arrow" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M13.2 5.2 20 12l-6.8 6.8-1.4-1.4 4.4-4.4H4v-2h12.2l-4.4-4.4z"/>
+      </svg>
+    </a>
+  </nav>
+
+  <!-- Main CTF Page Content -->
+  <main class="ctf-page-wrap">
+    
+    <!-- Header Section Flourish -->
+    <header class="section-number-header">
+      <span class="section-num">CTF</span>
+      <svg class="section-flourish" viewBox="0 0 160 20" fill="none">
+        <path d="M4 10 C 35 2, 60 18, 80 10 C 100 2, 125 18, 156 10" stroke="url(#goldGradCTF)" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="80" cy="10" r="3" fill="#e8c27e"/>
+        <defs>
+          <linearGradient id="goldGradCTF" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="transparent"/>
+            <stop offset="25%" stop-color="#f0cf8a"/>
+            <stop offset="75%" stop-color="#c59b43"/>
+            <stop offset="100%" stop-color="transparent"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="section-eyebrow">Defense Against the Dark Arts • Security Reliquary</span>
+      <h1 class="section-main-title">The Seven Horcruxes CTF</h1>
+      <p class="section-desc">
+        Seven concealed dark artifacts. Seven trials of cybersecurity, web sorcery, and digital forensics. All flags are verified through ancient enchantment wards. Shatter the seals and assemble the fragments of memory.
+      </p>
+    </header>
+
+    <!-- Compact Telemetry HUD (3 Small Vertically Thin Stat Boxes) -->
+    <section class="reliquary-hud" aria-label="Expedition Progress HUD">
+      <span id="hudSessionId" style="display:none;" aria-hidden="true"></span>
+      <div class="hud-stats-row">
+        <div class="hud-stat-box">
+          <span class="hud-stat-value" id="hudScoreVal">0</span>
+          <span class="hud-stat-label">Total Points</span>
+        </div>
+        <div class="hud-stat-box">
+          <span class="hud-stat-value" id="hudSolvedVal">0 / 7</span>
+          <span class="hud-stat-label">Horcruxes</span>
+        </div>
+        <div class="hud-stat-box">
+          <span class="hud-stat-value" id="hudPenaltiesVal">0</span>
+          <span class="hud-stat-label">Penalties</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- The 7 Challenges Grid -->
+    <div class="ctf-grid" id="challengesContainer">
+
+      <!-- Chamber 1 -->
+      <article class="magical-box ctf-card" id="cardLevel1">
+        <span class="card-bookmark-ribbon" title="Challenge Bookmark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
+        </span>
+        <span class="card-corner-star card-corner-star--tl">✦</span>
+        <span class="card-corner-star card-corner-star--tr">✦</span>
+        <span class="card-corner-star card-corner-star--bl">✦</span>
+        <span class="card-corner-star card-corner-star--br">✦</span>
+
+        <!-- Left Column: Hogwarts Portal -->
+        <div class="card-portal-col">
+          <div class="card-portal-frame">
+            <img class="card-portal-img" src="assest/hogwarts_arch.png" alt="Hogwarts Castle Night Sky" />
+          </div>
+        </div>
+
+        <!-- Right Column: Information & Details -->
+        <div class="card-info-col">
+          <div class="card-eyebrow">
+            <span class="sparkle">✦</span>
+            <span>CTF CHALLENGE • CHAMBER 01</span>
+          </div>
+
+          <h3 class="card-title-harry">The Cursed Diary</h3>
+
+          <p class="card-teaser">
+            An ancient diary holds a secret hidden within its pages. Look beyond the words, uncover the encoded message, and recover the first Soul Fragment.
+          </p>
+
+          <div class="card-meta-strip">
+            <!-- Category -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Category</span>
+                <span class="card-meta-value">Source Forensics</span>
+              </div>
+            </div>
+
+            <!-- Difficulty -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="18" y="4" width="3" height="16" rx="1"/>
+                  <rect x="10.5" y="9" width="3" height="11" rx="1"/>
+                  <rect x="3" y="14" width="3" height="6" rx="1"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Difficulty</span>
+                <span class="diff-pill status-pill">Easy</span>
+              </div>
+            </div>
+
+            <!-- Points -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Points</span>
+                <span class="card-meta-value">50</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Challenge Details Box -->
+          <div class="card-details-box">
+            <div class="card-details-header">
+              <svg class="scroll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 20H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2z"/>
+                <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+                <path d="M8 13h6"/>
+                <path d="M8 17h4"/>
+              </svg>
+              <span>Challenge Details</span>
+            </div>
+            <p class="card-details-desc">
+              Find the secret hidden in the source. An ancient diary holds a forgotten message encoded in the shadows of the page.
+            </p>
+            <div class="ctf-skills-tags">
+              <span class="ctf-skill-tag">HTML Comments</span>
+              <span class="ctf-skill-tag">Base64 Decode</span>
+              <span class="ctf-skill-tag">DOM Source</span>
+            </div>
+
+            <form class="ctf-submit-form" data-level="1">
+              <div class="ctf-section-title">Recover the Soul Fragment</div>
+              <div class="ctf-input-group">
+                <input class="ctf-flag-input" type="text" placeholder="Hackwarts{...}" required autocomplete="off">
+                <button class="ctf-cast-btn" type="submit">Cast</button>
+              </div>
+              <div class="ctf-feedback-msg"></div>
+            </form>
+          </div>
+
+          <!-- Footer Strip -->
+          <div class="card-footer-strip">
+            <div class="card-footer-left">
+              <button class="ctf-hint-btn" type="button" data-hint-level="1">Ancient Hint</button>
+            </div>
+            <div class="card-footer-right">
+              <a class="solve-challenge-btn ctf-enter-link" href="https://level1ctfhackwartzs.vercel.app/" target="_blank" rel="noopener noreferrer">
+                <img class="wand-icon" src="magic-wand.svg" alt="" aria-hidden="true" /> Solve Challenge &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Chamber 2 -->
+      <article class="magical-box ctf-card" id="cardLevel2">
+        <span class="card-bookmark-ribbon" title="Challenge Bookmark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
+        </span>
+        <span class="card-corner-star card-corner-star--tl">✦</span>
+        <span class="card-corner-star card-corner-star--tr">✦</span>
+        <span class="card-corner-star card-corner-star--bl">✦</span>
+        <span class="card-corner-star card-corner-star--br">✦</span>
+
+        <!-- Left Column: Hogwarts Portal -->
+        <div class="card-portal-col">
+          <div class="card-portal-frame">
+            <img class="card-portal-img" src="assest/hogwarts_arch.png" alt="Hogwarts Castle Night Sky" />
+          </div>
+        </div>
+
+        <!-- Right Column: Information & Details -->
+        <div class="card-info-col">
+          <div class="card-eyebrow">
+            <span class="sparkle">✦</span>
+            <span>CTF CHALLENGE • CHAMBER 02</span>
+          </div>
+
+          <h3 class="card-title-harry">The Resurrection Ring</h3>
+
+          <p class="card-teaser">
+            An ancient ring holds a forgotten secret. Its magic is corrupted, and only a hidden spell can reveal the truth.
+          </p>
+
+          <div class="card-meta-strip">
+            <!-- Category -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Category</span>
+                <span class="card-meta-value">JavaScript Logic</span>
+              </div>
+            </div>
+
+            <!-- Difficulty -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="18" y="4" width="3" height="16" rx="1"/>
+                  <rect x="10.5" y="9" width="3" height="11" rx="1"/>
+                  <rect x="3" y="14" width="3" height="6" rx="1"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Difficulty</span>
+                <span class="diff-pill status-pill">Easy-Med</span>
+              </div>
+            </div>
+
+            <!-- Points -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Points</span>
+                <span class="card-meta-value">75</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Challenge Details Box -->
+          <div class="card-details-box">
+            <div class="card-details-header">
+              <svg class="scroll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 20H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2z"/>
+                <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+                <path d="M8 13h6"/>
+                <path d="M8 17h4"/>
+              </svg>
+              <span>Challenge Details</span>
+            </div>
+            <p class="card-details-desc">
+              Inspect the spell, uncover the hidden phrase, and recover the second Soul Fragment from within the script logic.
+            </p>
+            <div class="ctf-skills-tags">
+              <span class="ctf-skill-tag">Client Logic</span>
+              <span class="ctf-skill-tag">Console Debugging</span>
+              <span class="ctf-skill-tag">De-obfuscation</span>
+            </div>
+
+            <form class="ctf-submit-form" data-level="2">
+              <div class="ctf-section-title">Recover the Soul Fragment</div>
+              <div class="ctf-input-group">
+                <input class="ctf-flag-input" type="text" placeholder="Hackwarts{...}" required autocomplete="off">
+                <button class="ctf-cast-btn" type="submit">Cast</button>
+              </div>
+              <div class="ctf-feedback-msg"></div>
+            </form>
+          </div>
+
+          <!-- Footer Strip -->
+          <div class="card-footer-strip">
+            <div class="card-footer-left">
+              <button class="ctf-hint-btn" type="button" data-hint-level="2">Ancient Hint</button>
+            </div>
+            <div class="card-footer-right">
+              <a class="solve-challenge-btn ctf-enter-link" href="https://level2ctfhackwartzsa.vercel.app/" target="_blank" rel="noopener noreferrer">
+                <img class="wand-icon" src="magic-wand.svg" alt="" aria-hidden="true" /> Solve Challenge &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Chamber 3 -->
+      <article class="magical-box ctf-card" id="cardLevel3">
+        <span class="card-bookmark-ribbon" title="Challenge Bookmark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
+        </span>
+        <span class="card-corner-star card-corner-star--tl">✦</span>
+        <span class="card-corner-star card-corner-star--tr">✦</span>
+        <span class="card-corner-star card-corner-star--bl">✦</span>
+        <span class="card-corner-star card-corner-star--br">✦</span>
+
+        <!-- Left Column: Hogwarts Portal -->
+        <div class="card-portal-col">
+          <div class="card-portal-frame">
+            <img class="card-portal-img" src="assest/hogwarts_arch.png" alt="Hogwarts Castle Night Sky" />
+          </div>
+        </div>
+
+        <!-- Right Column: Information & Details -->
+        <div class="card-info-col">
+          <div class="card-eyebrow">
+            <span class="sparkle">✦</span>
+            <span>CTF CHALLENGE • CHAMBER 03</span>
+          </div>
+
+          <h3 class="card-title-harry">The Slytherin Locket</h3>
+
+          <p class="card-teaser">
+            An ancient locket hides a secret within its mysterious messages. Only a careful investigator can uncover the truth.
+          </p>
+
+          <div class="card-meta-strip">
+            <!-- Category -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Category</span>
+                <span class="card-meta-value">Network Telemetry</span>
+              </div>
+            </div>
+
+            <!-- Difficulty -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="18" y="4" width="3" height="16" rx="1"/>
+                  <rect x="10.5" y="9" width="3" height="11" rx="1"/>
+                  <rect x="3" y="14" width="3" height="6" rx="1"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Difficulty</span>
+                <span class="diff-pill status-pill">Medium</span>
+              </div>
+            </div>
+
+            <!-- Points -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Points</span>
+                <span class="card-meta-value">100</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Challenge Details Box -->
+          <div class="card-details-box">
+            <div class="card-details-header">
+              <svg class="scroll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 20H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2z"/>
+                <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+                <path d="M8 13h6"/>
+                <path d="M8 17h4"/>
+              </svg>
+              <span>Challenge Details</span>
+            </div>
+            <p class="card-details-desc">
+              Inspect the network traffic, reveal the hidden inscription in the background API payloads, and recover the third Soul Fragment.
+            </p>
+            <div class="ctf-skills-tags">
+              <span class="ctf-skill-tag">Network Tab</span>
+              <span class="ctf-skill-tag">Fetch / XHR</span>
+              <span class="ctf-skill-tag">API Payloads</span>
+            </div>
+
+            <form class="ctf-submit-form" data-level="3">
+              <div class="ctf-section-title">Recover the Soul Fragment</div>
+              <div class="ctf-input-group">
+                <input class="ctf-flag-input" type="text" placeholder="Hackwarts{...}" required autocomplete="off">
+                <button class="ctf-cast-btn" type="submit">Cast</button>
+              </div>
+              <div class="ctf-feedback-msg"></div>
+            </form>
+          </div>
+
+          <!-- Footer Strip -->
+          <div class="card-footer-strip">
+            <div class="card-footer-left">
+              <button class="ctf-hint-btn" type="button" data-hint-level="3">Ancient Hint</button>
+            </div>
+            <div class="card-footer-right">
+              <a class="solve-challenge-btn ctf-enter-link" href="https://level3ctfhackwartzsah.vercel.app/" target="_blank" rel="noopener noreferrer">
+                <img class="wand-icon" src="magic-wand.svg" alt="" aria-hidden="true" /> Solve Challenge &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Chamber 4 -->
+      <article class="magical-box ctf-card" id="cardLevel4">
+        <span class="card-bookmark-ribbon" title="Challenge Bookmark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
+        </span>
+        <span class="card-corner-star card-corner-star--tl">✦</span>
+        <span class="card-corner-star card-corner-star--tr">✦</span>
+        <span class="card-corner-star card-corner-star--bl">✦</span>
+        <span class="card-corner-star card-corner-star--br">✦</span>
+
+        <!-- Left Column: Hogwarts Portal -->
+        <div class="card-portal-col">
+          <div class="card-portal-frame">
+            <img class="card-portal-img" src="assest/hogwarts_arch.png" alt="Hogwarts Castle Night Sky" />
+          </div>
+        </div>
+
+        <!-- Right Column: Information & Details -->
+        <div class="card-info-col">
+          <div class="card-eyebrow">
+            <span class="sparkle">✦</span>
+            <span>CTF CHALLENGE • CHAMBER 04</span>
+          </div>
+
+          <h3 class="card-title-harry">The Goblet of Misleading Clues</h3>
+
+          <p class="card-teaser">
+            The Goblet holds a trail of clues, but not everything is as it seems. Separate the truth from deception to uncover its secret.
+          </p>
+
+          <div class="card-meta-strip">
+            <!-- Category -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Category</span>
+                <span class="card-meta-value">Decoy Forensics</span>
+              </div>
+            </div>
+
+            <!-- Difficulty -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="18" y="4" width="3" height="16" rx="1"/>
+                  <rect x="10.5" y="9" width="3" height="11" rx="1"/>
+                  <rect x="3" y="14" width="3" height="6" rx="1"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Difficulty</span>
+                <span class="diff-pill status-pill">Medium</span>
+              </div>
+            </div>
+
+            <!-- Points -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Points</span>
+                <span class="card-meta-value">125</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Challenge Details Box -->
+          <div class="card-details-box">
+            <div class="card-details-header">
+              <svg class="scroll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 20H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2z"/>
+                <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+                <path d="M8 13h6"/>
+                <path d="M8 17h4"/>
+              </svg>
+              <span>Challenge Details</span>
+            </div>
+            <p class="card-details-desc">
+              Analyze the evidence files, compare contradictions, eliminate decoys, and recover the fourth Soul Fragment.
+            </p>
+            <div class="ctf-skills-tags">
+              <span class="ctf-skill-tag">JSON Records</span>
+              <span class="ctf-skill-tag">Decoy Elimination</span>
+              <span class="ctf-skill-tag">Data Query</span>
+            </div>
+
+            <form class="ctf-submit-form" data-level="4">
+              <div class="ctf-section-title">Recover the Soul Fragment</div>
+              <div class="ctf-input-group">
+                <input class="ctf-flag-input" type="text" placeholder="Hackwarts{...}" required autocomplete="off">
+                <button class="ctf-cast-btn" type="submit">Cast</button>
+              </div>
+              <div class="ctf-feedback-msg"></div>
+            </form>
+          </div>
+
+          <!-- Footer Strip -->
+          <div class="card-footer-strip">
+            <div class="card-footer-left">
+              <button class="ctf-hint-btn" type="button" data-hint-level="4">Ancient Hint</button>
+            </div>
+            <div class="card-footer-right">
+              <a class="solve-challenge-btn ctf-enter-link" href="https://github.com/sahil4love/Aap-Bhagwan-Ho/releases/download/1.0.0/goblet_clues.zip" download="goblet_clues.zip">
+                <img class="wand-icon" src="magic-wand.svg" alt="" aria-hidden="true" /> Solve Challenge &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Chamber 5 -->
+      <article class="magical-box ctf-card" id="cardLevel5">
+        <span class="card-bookmark-ribbon" title="Challenge Bookmark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
+        </span>
+        <span class="card-corner-star card-corner-star--tl">✦</span>
+        <span class="card-corner-star card-corner-star--tr">✦</span>
+        <span class="card-corner-star card-corner-star--bl">✦</span>
+        <span class="card-corner-star card-corner-star--br">✦</span>
+
+        <!-- Left Column: Hogwarts Portal -->
+        <div class="card-portal-col">
+          <div class="card-portal-frame">
+            <img class="card-portal-img" src="assest/hogwarts_arch.png" alt="Hogwarts Castle Night Sky" />
+          </div>
+        </div>
+
+        <!-- Right Column: Information & Details -->
+        <div class="card-info-col">
+          <div class="card-eyebrow">
+            <span class="sparkle">✦</span>
+            <span>CTF CHALLENGE • CHAMBER 05</span>
+          </div>
+
+          <h3 class="card-title-harry">The Lost Diadem</h3>
+
+          <p class="card-teaser">
+            An ancient diadem conceals a secret hidden beneath layers of magic. Only those who look beyond the surface can reveal its truth.
+          </p>
+
+          <div class="card-meta-strip">
+            <!-- Category -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Category</span>
+                <span class="card-meta-value">DOM Exploitation</span>
+              </div>
+            </div>
+
+            <!-- Difficulty -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="18" y="4" width="3" height="16" rx="1"/>
+                  <rect x="10.5" y="9" width="3" height="11" rx="1"/>
+                  <rect x="3" y="14" width="3" height="6" rx="1"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Difficulty</span>
+                <span class="diff-pill status-pill">Hard</span>
+              </div>
+            </div>
+
+            <!-- Points -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Points</span>
+                <span class="card-meta-value">150</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Challenge Details Box -->
+          <div class="card-details-box">
+            <div class="card-details-header">
+              <svg class="scroll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 20H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2z"/>
+                <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+                <path d="M8 13h6"/>
+                <path d="M8 17h4"/>
+              </svg>
+              <span>Challenge Details</span>
+            </div>
+            <p class="card-details-desc">
+              Explore the page, uncover the hidden clue inside the DOM hierarchy or custom data attributes, and recover the fifth Soul Fragment.
+            </p>
+            <div class="ctf-skills-tags">
+              <span class="ctf-skill-tag">DOM Inspection</span>
+              <span class="ctf-skill-tag">Data Attributes</span>
+              <span class="ctf-skill-tag">querySelectorAll</span>
+            </div>
+
+            <form class="ctf-submit-form" data-level="5">
+              <div class="ctf-section-title">Recover the Soul Fragment</div>
+              <div class="ctf-input-group">
+                <input class="ctf-flag-input" type="text" placeholder="Hackwarts{...}" required autocomplete="off">
+                <button class="ctf-cast-btn" type="submit">Cast</button>
+              </div>
+              <div class="ctf-feedback-msg"></div>
+            </form>
+          </div>
+
+          <!-- Footer Strip -->
+          <div class="card-footer-strip">
+            <div class="card-footer-left">
+              <button class="ctf-hint-btn" type="button" data-hint-level="5">Ancient Hint</button>
+            </div>
+            <div class="card-footer-right">
+              <a class="solve-challenge-btn ctf-enter-link" href="../challenges/level5-diadem/index.html">
+                <img class="wand-icon" src="magic-wand.svg" alt="" aria-hidden="true" /> Solve Challenge &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Chamber 6 -->
+      <article class="magical-box ctf-card" id="cardLevel6">
+        <span class="card-bookmark-ribbon" title="Challenge Bookmark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
+        </span>
+        <span class="card-corner-star card-corner-star--tl">✦</span>
+        <span class="card-corner-star card-corner-star--tr">✦</span>
+        <span class="card-corner-star card-corner-star--bl">✦</span>
+        <span class="card-corner-star card-corner-star--br">✦</span>
+
+        <!-- Left Column: Hogwarts Portal -->
+        <div class="card-portal-col">
+          <div class="card-portal-frame">
+            <img class="card-portal-img" src="assest/hogwarts_arch.png" alt="Hogwarts Castle Night Sky" />
+          </div>
+        </div>
+
+        <!-- Right Column: Information & Details -->
+        <div class="card-info-col">
+          <div class="card-eyebrow">
+            <span class="sparkle">✦</span>
+            <span>CTF CHALLENGE • CHAMBER 06</span>
+          </div>
+
+          <h3 class="card-title-harry">The Serpent’s Logs</h3>
+
+          <p class="card-teaser">
+            Strange events have been recorded in the Serpent’s logs. Hidden among the entries lies a secret waiting to be uncovered.
+          </p>
+
+          <div class="card-meta-strip">
+            <!-- Category -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Category</span>
+                <span class="card-meta-value">Log Forensics</span>
+              </div>
+            </div>
+
+            <!-- Difficulty -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="18" y="4" width="3" height="16" rx="1"/>
+                  <rect x="10.5" y="9" width="3" height="11" rx="1"/>
+                  <rect x="3" y="14" width="3" height="6" rx="1"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Difficulty</span>
+                <span class="diff-pill status-pill">Expert</span>
+              </div>
+            </div>
+
+            <!-- Points -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Points</span>
+                <span class="card-meta-value">200</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Challenge Details Box -->
+          <div class="card-details-box">
+            <div class="card-details-header">
+              <svg class="scroll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 20H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2z"/>
+                <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+                <path d="M8 13h6"/>
+                <path d="M8 17h4"/>
+              </svg>
+              <span>Challenge Details</span>
+            </div>
+            <p class="card-details-desc">
+              Analyze the logs, trace the sequence of events chronologically, filter false trails, and recover the sixth Soul Fragment.
+            </p>
+            <div class="ctf-skills-tags">
+              <span class="ctf-skill-tag">Log Analysis</span>
+              <span class="ctf-skill-tag">Timestamp Sorting</span>
+              <span class="ctf-skill-tag">Incident Forensics</span>
+            </div>
+
+            <form class="ctf-submit-form" data-level="6">
+              <div class="ctf-section-title">Recover the Soul Fragment</div>
+              <div class="ctf-input-group">
+                <input class="ctf-flag-input" type="text" placeholder="Hackwarts{...}" required autocomplete="off">
+                <button class="ctf-cast-btn" type="submit">Cast</button>
+              </div>
+              <div class="ctf-feedback-msg"></div>
+            </form>
+          </div>
+
+          <!-- Footer Strip -->
+          <div class="card-footer-strip">
+            <div class="card-footer-left">
+              <button class="ctf-hint-btn" type="button" data-hint-level="6">Ancient Hint</button>
+            </div>
+            <div class="card-footer-right">
+              <a class="solve-challenge-btn ctf-enter-link" href="https://github.com/sahil4love/Aap-Bhagwan-Ho/releases/download/1.0.0.1/serpent_archive.zip" download="serpent_archive.zip" target="_blank" rel="noopener noreferrer">
+                <img class="wand-icon" src="magic-wand.svg" alt="" aria-hidden="true" /> Solve Challenge &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Chamber 7 (Grand Finale) -->
+      <article class="magical-box ctf-card ctf-final-card" id="cardLevel7">
+        <span class="card-bookmark-ribbon" title="Challenge Bookmark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
+        </span>
+        <span class="card-corner-star card-corner-star--tl">✦</span>
+        <span class="card-corner-star card-corner-star--tr">✦</span>
+        <span class="card-corner-star card-corner-star--bl">✦</span>
+        <span class="card-corner-star card-corner-star--br">✦</span>
+
+        <!-- Left Column: Hogwarts Portal -->
+        <div class="card-portal-col">
+          <div class="card-portal-frame">
+            <img class="card-portal-img" src="assest/hogwarts_arch.png" alt="Hogwarts Castle Night Sky" />
+          </div>
+        </div>
+
+        <!-- Right Column: Information & Details -->
+        <div class="card-info-col">
+          <div class="card-eyebrow">
+            <span class="sparkle">✦</span>
+            <span>GRAND FINALE • CHAMBER 07</span>
+          </div>
+
+          <h3 class="card-title-harry">The Final Horcrux</h3>
+
+          <p class="card-teaser">
+            Six Soul Fragments have been recovered, but the final secret remains sealed. Only by connecting everything you have discovered can the truth be revealed.
+          </p>
+
+          <div class="card-meta-strip">
+            <!-- Category -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Category</span>
+                <span class="card-meta-value" style="color:#d8b4fe;">Meta Synthesis</span>
+              </div>
+            </div>
+
+            <!-- Difficulty -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="18" y="4" width="3" height="16" rx="1"/>
+                  <rect x="10.5" y="9" width="3" height="11" rx="1"/>
+                  <rect x="3" y="14" width="3" height="6" rx="1"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Difficulty</span>
+                <span class="diff-pill status-pill">Master</span>
+              </div>
+            </div>
+
+            <!-- Points -->
+            <div class="card-meta-item">
+              <div class="card-meta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
+              <div class="card-meta-content">
+                <span class="card-meta-label">Points</span>
+                <span class="card-meta-value" style="color:#f5d0fe;">300</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Challenge Details Box -->
+          <div class="card-details-box" style="border-color: rgba(192, 132, 252, 0.35);">
+            <div class="card-details-header" style="color: #d8b4fe;">
+              <svg class="scroll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 20H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2z"/>
+                <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+                <path d="M8 13h6"/>
+                <path d="M8 17h4"/>
+              </svg>
+              <span>Challenge Details</span>
+            </div>
+            <p class="card-details-desc">
+              Combine all six Soul Fragments, solve the final python ritual, and complete the Hackwarts CTF to restore the realm.
+            </p>
+            <div class="ctf-skills-tags">
+              <span class="ctf-skill-tag" style="border-color: rgba(192, 132, 252, 0.3); color: #e9d5ff;">Meta Synthesis</span>
+              <span class="ctf-skill-tag" style="border-color: rgba(192, 132, 252, 0.3); color: #e9d5ff;">Multi-Stage Cryptography</span>
+              <span class="ctf-skill-tag" style="border-color: rgba(192, 132, 252, 0.3); color: #e9d5ff;">Master Key Derivation</span>
+            </div>
+
+            <form class="ctf-submit-form" data-level="7" style="border-color: rgba(192, 132, 252, 0.3);">
+              <div class="ctf-section-title" style="color: #d8b4fe;">Destroy the Final Horcrux</div>
+              <div class="ctf-input-group">
+                <input class="ctf-flag-input" type="text" placeholder="Hackwarts{...}" required autocomplete="off" style="border-color: rgba(192, 132, 252, 0.35);">
+                <button class="ctf-cast-btn" type="submit" style="background: linear-gradient(135deg, #7e22ce, #4c1d95); border-color: #c084fc; color: #fff;">Cast Ritual</button>
+              </div>
+              <div class="ctf-feedback-msg"></div>
+            </form>
+          </div>
+
+          <!-- Footer Strip -->
+          <div class="card-footer-strip">
+            <div class="card-footer-left"></div>
+            <div class="card-footer-right">
+              <a class="solve-challenge-btn ctf-enter-link" href="https://github.com/sahil4love/Aap-Bhagwan-Ho/releases/download/1.0.0.0/final.py" download="final.py" target="_blank" rel="noopener noreferrer">
+                <img class="wand-icon" src="magic-wand.svg" alt="" aria-hidden="true" /> Solve Challenge &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </main>
+
+  <!-- Hint Unlock Modal -->
+  <div class="ctf-modal-overlay" id="hintModal" role="dialog" aria-modal="true" aria-labelledby="hintModalTitle">
+    <div class="ctf-modal-box">
+      <span class="box-corner box-corner--tl"></span>
+      <span class="box-corner box-corner--tr"></span>
+      <span class="box-corner box-corner--bl"></span>
+      <span class="box-corner box-corner--br"></span>
+      <button class="modal-close-btn" type="button" id="closeHintModalBtn" aria-label="Close guidance scroll">&times;</button>
+
+      <h3 id="hintModalTitle">✦ Chamber Ancient Guidance</h3>
+      <p id="hintModalDesc">
+        Ancient guidance is preserved in the restricted archives. Releasing a hint will deduct points from your House's final score tally:
+        <strong style="color:#fde047;">Hint 1 (-5 PTS)</strong> and <strong style="color:#fca5a5;">Hint 2 (-10 PTS)</strong>.
+      </p>
+
+      <div id="hintsListContainer" class="hints-list-container">
+        <!-- Dynamically rendered Hint 1 and Hint 2 cards -->
+      </div>
+
+      <div class="modal-footer-strip">
+        <span id="hintModalStatus" style="font-size:12.5px; color:#9ba5b7; font-style:italic;">Point penalties apply to your House tally upon unlocking each hint.</span>
+        <button class="modal-footer-close-btn" type="button" id="cancelHintBtn">Close Scroll</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p class="footer-credits">
+      Organized with passion by <strong>Black Rabbit</strong> Student Technology Community.<br>
+      Hackwarts 2026 CTF • All magical rights reserved.
+    </p>
+  </footer>
+
+  <!-- Audio Background Player & Toggle -->
+  <audio class="background-music" loop preload="metadata">
+    <source src="back_song.mp4" type="audio/mp4">
+  </audio>
+
+  <button class="music-toggle" type="button" aria-label="Play background music" aria-pressed="false" title="Play background music">
+    <svg class="icon-sound" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12zM14 3.23v2.06a7 7 0 0 1 0 13.42v2.06a9 9 0 0 0 0-17.54z"/>
+    </svg>
+    <svg class="icon-muted" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 9v6h4l5 4V5L7 9H3zm13.59 3 2.12 2.12-1.41 1.41L15.17 13.4l-2.12 2.13-1.42-1.42L13.76 12l-2.13-2.12 1.42-1.42 2.12 2.13 2.13-2.13 1.41 1.42L16.59 12z"/>
+    </svg>
+  </button>
+
+  <!-- Wand Cursor Graphic -->
+  <div class="wand-cursor" aria-hidden="true">
+    <img class="wand-cursor-image" src="wand-cursor.svg" alt="">
+    <span class="wand-orbit">
+      <span class="wand-spark"></span>
+    </span>
+    <span class="wand-orbit wand-orbit--wide">
+      <span class="wand-spark"></span>
+    </span>
+  </div>
+
+  <!-- Interactive Logic Script -->
+  <script>
+    // --- Audio Toggle & Wand Cursor ---
+    const music = document.querySelector(".background-music");
+    const musicToggle = document.querySelector(".music-toggle");
+    const wandCursor = document.querySelector(".wand-cursor");
+
+    if (musicToggle && music) {
+      musicToggle.addEventListener("click", async () => {
+        const isPlaying = musicToggle.getAttribute("aria-pressed") === "true";
+        if (isPlaying) {
+          music.pause();
+          musicToggle.setAttribute("aria-pressed", "false");
+        } else {
+          try {
+            await music.play();
+            musicToggle.setAttribute("aria-pressed", "true");
+          } catch (e) {
+            console.warn("Autoplay was blocked:", e);
+          }
+        }
+      });
+    }
+
+    if (wandCursor) {
+      window.addEventListener("pointermove", (e) => {
+        wandCursor.classList.add("is-visible");
+        wandCursor.style.transform = `translate3d(${e.clientX - 24}px, ${e.clientY - 8}px, 0)`;
+      }, { passive: true });
+
+      window.addEventListener("pointerleave", () => {
+        wandCursor.classList.remove("is-visible");
+      });
+    }
+
+    // --- Server CTF Client API ---
+    let currentProgress = null;
+    let challengesMeta = null;
+    let selectedHintLevel = null;
+
+    async function fetchProgress() {
+      try {
+        const res = await fetch("/api/progress");
+        if (!res.ok) throw new Error("Server response failed");
+        currentProgress = await res.json();
+        updateHUD(currentProgress);
+      } catch (err) {
+        console.warn("Unable to fetch /api/progress:", err);
+        document.getElementById("hudSessionId").textContent = "Local Offline Mode";
+      }
+    }
+
+    function updateHUD(p) {
+      if (!p) return;
+      document.getElementById("hudSessionId").textContent = p.sessionId ? p.sessionId.substring(0, 14) + "..." : "Active";
+      document.getElementById("hudScoreVal").textContent = p.score || 0;
+      document.getElementById("hudSolvedVal").textContent = `${(p.solvedLevels || []).length} / 7`;
+      document.getElementById("hudPenaltiesVal").textContent = p.penalties || 0;
+
+      // Update shard pills
+      const shardsList = p.fragmentsRecovered || [];
+      for (let i = 1; i <= 7; i++) {
+        const pill = document.querySelector(`.shard-pill[data-shard="${i}"]`);
+        if (pill) {
+          const isRecovered = (p.solvedLevels || []).includes(i);
+          if (isRecovered) {
+            pill.classList.add("is-recovered");
+            pill.textContent = `Shard ${i} ✦`;
+          } else {
+            pill.classList.remove("is-recovered");
+          }
+        }
+      }
+
+      // Update card states
+      (p.solvedLevels || []).forEach(lvl => {
+        const card = document.getElementById(`cardLevel${lvl}`);
+        if (card) {
+          card.classList.add("is-solved");
+          const pill = card.querySelector(".status-pill");
+          if (pill) {
+            pill.textContent = "CLEANSED ✦";
+          }
+          const input = card.querySelector(".ctf-flag-input");
+          if (input) {
+            input.disabled = true;
+            input.value = "Flag Authenticated";
+          }
+          const btn = card.querySelector(".ctf-cast-btn");
+          if (btn) btn.disabled = true;
+        }
+      });
+    }
+
+    // Flag Submission Handling
+    document.querySelectorAll(".ctf-submit-form").forEach(form => {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const level = parseInt(form.dataset.level, 10);
+        const input = form.querySelector(".ctf-flag-input");
+        const feedback = form.querySelector(".ctf-feedback-msg");
+        const flag = input.value.trim();
+
+        feedback.style.display = "block";
+        feedback.className = "ctf-feedback-msg";
+        feedback.textContent = "Summoning ancient magic to verify flag...";
+
+        try {
+          const res = await fetch("/api/submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ level, flag })
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            feedback.className = "ctf-feedback-msg success";
+            feedback.textContent = `✦ Correct! ${data.message} (+${data.pointsAwarded} PTS)`;
+            await fetchProgress();
+          } else {
+            feedback.className = "ctf-feedback-msg error";
+            feedback.textContent = `✕ ${data.message}`;
+          }
+        } catch (err) {
+          feedback.className = "ctf-feedback-msg error";
+          feedback.textContent = "✕ Network enchantment interrupted. Please try again.";
+        }
+      });
+    });
+
+    // Reset Progress
+    document.getElementById("resetProgressBtn")?.addEventListener("click", async () => {
+      if (!confirm("Are you sure you want to reset your CTF expedition and erase recovered fragments?")) return;
+      try {
+        await fetch("/api/reset", { method: "POST" });
+        location.reload();
+      } catch (err) {
+        alert("Failed to reset expedition.");
+      }
+    });
+
+    document.getElementById("refreshProgressBtn")?.addEventListener("click", () => {
+      fetchProgress();
+    });
+
+    // ========================================================
+    // SECURE SERVER-SIDE HINTS MANAGEMENT (Levels 1 - 7)
+    // ========================================================
+    const hintModal = document.getElementById("hintModal");
+    const hintModalTitle = document.getElementById("hintModalTitle");
+    const hintsListContainer = document.getElementById("hintsListContainer");
+    const hintModalStatus = document.getElementById("hintModalStatus");
+
+    const CHAMBER_NAMES = {
+      1: "The Cursed Diary",
+      2: "The Resurrection Ring",
+      3: "The Slytherin Locket",
+      4: "The Goblet of Misleading Clues",
+      5: "The Lost Diadem",
+      6: "The Serpent’s Logs",
+      7: "The Final Horcrux"
+    };
+
+    const CHAMBER_HINTS_SPEC = {
+      1: [
+        { id: 1, cost: 5, text: "The page holds secrets that your eyes cannot see." },
+        { id: 2, cost: 10, text: "Inspect the HTML source and look for a hidden comment or encoded message." }
+      ],
+      2: [
+        { id: 1, cost: 5, text: "Magic follows rules, and sometimes those rules are written in plain sight." },
+        { id: 2, cost: 10, text: "Open the browser DevTools and inspect the JavaScript code for the hidden phrase." }
+      ],
+      3: [
+        { id: 1, cost: 5, text: "The page may be silent, but the browser is talking." },
+        { id: 2, cost: 10, text: "Open DevTools → Network → Fetch/XHR, trigger the artifact request, and inspect its response." }
+      ],
+      4: [
+        { id: 1, cost: 5, text: "Not every clue deserves your trust." },
+        { id: 2, cost: 10, text: "Examine the provided files, compare their contents, and identify the clue that contradicts the others." }
+      ],
+      5: [
+        { id: 1, cost: 5, text: "What you see on the page is only part of the story." },
+        { id: 2, cost: 10, text: "Inspect the HTML DOM in DevTools and look for hidden elements or custom data-* attributes." }
+      ],
+      6: [
+        { id: 1, cost: 5, text: "Every event has a time, and every time has a place in the story." },
+        { id: 2, cost: 10, text: "Sort the log entries by timestamp, follow the recovered fragments in chronological order, and ignore the marked false trail." }
+      ],
+      7: []
+    };
+
+    // Client cache of revealed hint texts across session
+    const unlockedHintsCache = {};
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderHintsModal(level) {
+      selectedHintLevel = level;
+      const title = CHAMBER_NAMES[level] || `Chamber ${level}`;
+      if (hintModalTitle) {
+        hintModalTitle.textContent = `✦ Level ${level} — ${title}`;
+      }
+      if (hintModalStatus) {
+        hintModalStatus.textContent = "Point penalties apply to your House tally upon unlocking each hint.";
+      }
+
+      const hints = CHAMBER_HINTS_SPEC[level] || [];
+      const serverUnlockedList = (currentProgress && currentProgress.hintsUnlocked && currentProgress.hintsUnlocked[level]) || [];
+      
+      if (!hintsListContainer) return;
+      hintsListContainer.innerHTML = "";
+
+      hints.forEach(hint => {
+        const isUnlocked = serverUnlockedList.includes(hint.id) || !!(unlockedHintsCache[level] && unlockedHintsCache[level][hint.id]);
+        const revealedText = (unlockedHintsCache[level] && unlockedHintsCache[level][hint.id]) || (isUnlocked ? hint.text : null);
+
+        const card = document.createElement("div");
+        card.className = `hint-card-item ${isUnlocked ? 'is-unlocked' : ''}`;
+        card.id = `hintCard_${level}_${hint.id}`;
+
+        const costLabel = hint.cost === 0 ? "FREE" : `-${hint.cost} PTS`;
+
+        card.innerHTML = `
+          <div class="hint-card-header">
+            <h4 class="hint-card-title">
+              <span>✦ Hint ${hint.id}</span>
+            </h4>
+            <span class="hint-cost-badge ${isUnlocked ? 'is-unlocked' : 'is-locked'}">
+              ${isUnlocked ? `UNLOCKED (${costLabel})` : costLabel}
+            </span>
+          </div>
+          <div class="hint-card-body">
+            ${isUnlocked ? `
+              <div class="hint-body-unlocked">
+                ${escapeHtml(revealedText || hint.text)}
+              </div>
+            ` : `
+              <div class="hint-body-locked">
+                <p class="hint-locked-text">
+                  This parchment is guarded in the Chamber archives. Unlocking will deduct <strong>${hint.cost} points</strong> from your House score.
+                </p>
+                <button type="button" class="hint-unlock-action-btn" data-level="${level}" data-hint-id="${hint.id}">
+                  <span>✦ Reveal Hint ${hint.id} (${costLabel})</span>
+                </button>
+              </div>
+            `}
+          </div>
+        `;
+        hintsListContainer.appendChild(card);
+      });
+
+      // Bind click handlers to newly rendered action buttons
+      hintsListContainer.querySelectorAll(".hint-unlock-action-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const lvl = parseInt(btn.dataset.level, 10);
+          const hId = parseInt(btn.dataset.hintId, 10);
+          await unlockHint(lvl, hId, btn);
+        });
+      });
+    }
+
+    async function unlockHint(level, hintId, btn) {
+      if (!btn) return;
+      btn.disabled = true;
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = `<span>✦ Deciphering Ancient Scroll...</span>`;
+
+      try {
+        const res = await fetch("/api/hint", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ level, hintId })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            if (!unlockedHintsCache[level]) unlockedHintsCache[level] = {};
+            unlockedHintsCache[level][hintId] = data.hintText || data.hint;
+            if (hintModalStatus) {
+              hintModalStatus.textContent = `✦ Hint ${hintId} revealed! Deducted ${data.cost} points from House tally.`;
+            }
+            // Sync with backend progress immediately
+            await fetchProgress();
+            renderHintsModal(level);
+            return;
+          }
+        }
+        throw new Error("Server unlock returned unsuccessful");
+      } catch (err) {
+        console.warn("Server connection notice, activating resilient fallback:", err);
+        const fallbackHint = (CHAMBER_HINTS_SPEC[level] || []).find(h => h.id === hintId);
+        if (fallbackHint) {
+          if (!unlockedHintsCache[level]) unlockedHintsCache[level] = {};
+          unlockedHintsCache[level][hintId] = fallbackHint.text;
+
+          if (!currentProgress) currentProgress = { penalties: 0, score: 0, hintsUnlocked: {} };
+          if (!currentProgress.hintsUnlocked) currentProgress.hintsUnlocked = {};
+          if (!currentProgress.hintsUnlocked[level]) currentProgress.hintsUnlocked[level] = [];
+          if (!currentProgress.hintsUnlocked[level].includes(hintId)) {
+            currentProgress.hintsUnlocked[level].push(hintId);
+            currentProgress.penalties = (currentProgress.penalties || 0) + fallbackHint.cost;
+            currentProgress.score = Math.max(0, (currentProgress.score || 0) - fallbackHint.cost);
+          }
+          if (hintModalStatus) {
+            hintModalStatus.textContent = `✦ Hint ${hintId} deciphered (-${fallbackHint.cost} PTS).`;
+          }
+          updateHUD(currentProgress);
+          renderHintsModal(level);
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+          alert("Unable to decipher hint at this moment.");
+        }
+      }
+    }
+
+    // Bind all chamber card hint buttons
+    document.querySelectorAll(".ctf-hint-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const level = parseInt(btn.dataset.hintLevel, 10);
+        renderHintsModal(level);
+        hintModal.classList.add("is-active");
+      });
+    });
+
+    document.getElementById("closeHintModalBtn")?.addEventListener("click", () => {
+      hintModal.classList.remove("is-active");
+    });
+    document.getElementById("cancelHintBtn")?.addEventListener("click", () => {
+      hintModal.classList.remove("is-active");
+    });
+
+    // Close on overlay backdrop click
+    hintModal.addEventListener("click", (e) => {
+      if (e.target === hintModal) {
+        hintModal.classList.remove("is-active");
+      }
+    });
+
+    // Close on Escape key
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && hintModal.classList.contains("is-active")) {
+        hintModal.classList.remove("is-active");
+      }
+    });
+
+    // ========================================================
+    // CONFIGURATION: INDIVIDUAL CHAMBER HOSTING URLS
+    // ========================================================
+    // When you deploy each challenge website separately (e.g. on
+    // Vercel, Netlify, subdomains, etc.), simply update the URLs below:
+    const CHAMBER_HOSTS = window.CHAMBER_HOSTS || {
+      1: "https://level1ctfhackwartzs.vercel.app/",
+      2: "https://level2ctfhackwartzsa.vercel.app/",
+      3: "https://level3ctfhackwartzsah.vercel.app/",
+      4: "https://github.com/sahil4love/Aap-Bhagwan-Ho/releases/download/1.0.0/goblet_clues.zip",
+      5: "../challenges/level5-diadem/index.html",
+      6: "https://github.com/sahil4love/Aap-Bhagwan-Ho/releases/download/1.0.0.1/serpent_archive.zip",
+      7: "https://github.com/sahil4love/Aap-Bhagwan-Ho/releases/download/1.0.0.0/final.py"
+    };
+
+    // Update Explore Chamber links
+    document.querySelectorAll(".ctf-enter-link").forEach((link, idx) => {
+      const level = idx + 1;
+      if (CHAMBER_HOSTS[level]) {
+        link.href = CHAMBER_HOSTS[level];
+        if (CHAMBER_HOSTS[level].endsWith('.zip') || CHAMBER_HOSTS[level].endsWith('.py')) {
+          const filename = CHAMBER_HOSTS[level].split('/').pop();
+          link.setAttribute("download", filename);
+        }
+        if (CHAMBER_HOSTS[level].startsWith("http")) {
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+        }
+      }
+    });
+
+    // Initial Load
+    fetchProgress();
+  </script>
+</body>
+</html>
